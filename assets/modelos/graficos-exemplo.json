@@ -1,0 +1,48 @@
+[
+  {
+    "tipo": "barra",
+    "titulo": "Processos por área",
+    "subtitulo": "Distribuição dos processos novos em 2025",
+    "fonte": "[CONFERIR: sistema e data da extração]",
+    "rotulos": ["Tributário", "Saúde", "Pessoal e previdenciário", "Meio ambiente"],
+    "series": [{"nome": "2025", "valores": [320, 210, 145, 38]}],
+    "destaque": [0]
+  },
+  {
+    "tipo": "coluna",
+    "titulo": "Prazo médio de tramitação",
+    "subtitulo": "Em dias, por ano",
+    "rotulos": ["2022", "2023", "2024", "2025"],
+    "series": [
+      {"nome": "Administrativo", "valores": [48, 41, 36, 30]},
+      {"nome": "Judicial", "valores": [120, 115, 110, 98]}
+    ],
+    "unidade": ""
+  },
+  {
+    "tipo": "linha",
+    "titulo": "Taxa de êxito",
+    "rotulos": ["2021", "2022", "2023", "2024", "2025"],
+    "series": [{"nome": "Êxito", "valores": [61.5, 64.2, 66.8, 70.1, 73.4]}],
+    "unidade": "%",
+    "casas": 1
+  },
+  {
+    "tipo": "rosca",
+    "titulo": "Origem das demandas",
+    "rotulos": ["Secretarias estaduais", "Autarquias", "Municípios", "Outras origens"],
+    "series": [{"nome": "Demandas", "valores": [540, 220, 130, 60]}],
+    "total": "demandas"
+  },
+  {
+    "tipo": "coluna",
+    "titulo": "Resultado por instância",
+    "rotulos": ["Primeira instância", "Segunda instância", "Tribunais superiores"],
+    "series": [
+      {"nome": "Favorável", "valores": [200, 90, 40]},
+      {"nome": "Parcial", "valores": [60, 35, 12]},
+      {"nome": "Desfavorável", "valores": [45, 20, 8]}
+    ],
+    "empilhado": true
+  }
+]

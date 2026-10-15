@@ -116,6 +116,30 @@ def higienizar(sopa) -> None:
                     del tag.attrs[nome]
 
 
+RX_NUMERICO = re.compile(r"^[\d.,%\s\u2212\-+R$/]+$")
+
+
+def ajustar_tabela(t) -> None:
+    """Classes de apresentação: `densa` a partir de seis colunas (para caber na
+    largura útil) e `num` nas colunas só de número (alinhadas à direita)."""
+    linhas = t.find_all("tr")
+    if not linhas:
+        return
+    largura = sum(int(c.get("colspan", 1)) for c in linhas[0].find_all(["th", "td"]))
+    if largura >= 6:
+        t["class"] = t.get("class", []) + ["densa"]
+    if any(c.has_attr("colspan") or c.has_attr("rowspan") for c in t.find_all(["th", "td"])):
+        return
+    corpo = [tr.find_all("td") for tr in linhas if tr.find("td")]
+    for j in range(largura):
+        col = [c[j].get_text(strip=True) for c in corpo if len(c) == largura]
+        if col and all(v and RX_NUMERICO.match(v) for v in col):
+            for tr in linhas:
+                cels = tr.find_all(["th", "td"])
+                if len(cels) == largura:
+                    cels[j]["class"] = cels[j].get("class", []) + ["num"]
+
+
 def estruturar(bruto: str, numerar: bool, sem_quebra: bool = False):
     """Aplica as classes do design system e devolve (corpo, itens do sumário)."""
     sopa = BeautifulSoup(bruto, "html.parser")
@@ -189,9 +213,17 @@ def estruturar(bruto: str, numerar: bool, sem_quebra: bool = False):
                     filho.decompose()
             t.append(thead)
             t.append(tbody)
+        ajustar_tabela(t)
 
     for img in sopa.find_all("img"):
         img.attrs.setdefault("alt", "")
+        pai = img.parent
+        # imagem sozinha no parágrafo vira figura: não parte entre páginas e
+        # ganha legenda se o texto trouxer uma
+        if pai.name == "p" and not pai.get_text(strip=True) and len(pai.find_all(True)) == 1:
+            fig = sopa.new_tag("figure", attrs={"class": "figura"})
+            pai.replace_with(fig)
+            fig.append(img)
 
     # a numeração do próprio texto deixa "1." solto em listas aninhadas do Word
     corpo = sopa.decode(formatter="minimal").replace("\u00a0", "&nbsp;")
@@ -262,6 +294,17 @@ def main() -> int:
     print(f"sumário:  {sumario}")
     print(f"  {secoes} seções, {subs} subseções, "
           f"{corpo.count('<table')} tabelas, {corpo.count('<img')} imagens")
+    if ext == ".docx":
+        from grafico import contar_graficos
+        graficos = contar_graficos(args.arquivo)
+        if graficos:
+            print(f"  AVISO: {graficos} gráfico(s) nativo(s) do Word não foram levados ao HTML "
+                  f"(o Word guarda gráfico como objeto). Rode: grafico extrair {args.arquivo.name}",
+                  file=sys.stderr)
+    n_tab, n_img = corpo.count("<table"), corpo.count("<img")
+    if n_tab or n_img:
+        print(f"  Tabelas e imagens encontradas: pergunte ao usuário se quer refazê-las no "
+              f"padrão da PGE (references/graficos-e-tabelas.md).")
     if not itens:
         print("  AVISO: nenhum título encontrado. O texto de origem usa estilos de "
               "título (Título 1, Título 2) ou # no Markdown?", file=sys.stderr)

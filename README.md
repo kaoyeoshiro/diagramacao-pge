@@ -4,7 +4,7 @@ Skill para o Claude Code e para o Claude Desktop que diagrama documentos institu
 
 Serve a manual, cartilha, apostila, programa, informativo, relatório, nota técnica e ofício. Não faz peça processual e não gera imagens: a arte da capa é a que o usuário anexar, e sem arte a capa usa uma faixa vetorial padrão.
 
-A skill conduz uma entrevista curta (título, expediente, contracapa, arte), converte o texto de um `.docx` ou `.md`, monta o documento, confere a tipografia, compila o PDF e mostra cada página para conferência antes de entregar.
+A skill conduz uma entrevista curta (título, expediente, contracapa, arte), converte o texto de um `.docx` ou `.md`, revisa ortografia e gramática (com relatório do que mudou), refaz tabelas e gráficos do original no padrão da PGE se o usuário quiser, monta o documento, confere a tipografia, compila o PDF e mostra cada página para conferência antes de entregar.
 
 ## Instalação
 
@@ -37,6 +37,9 @@ dpge imagem faixa arte.png --saida capa-faixa.png
 dpge checar documento.html --corrigir
 dpge build documento.html --saida Manual.pdf --conferir
 dpge sumario documento.html Manual.pdf --ate-estabilizar
+dpge revisar corpo-original.html corpo.html --saida revisao.md
+dpge grafico extrair original.docx
+dpge grafico criar dados.json --saida graficos.html
 ```
 
 ## O que há no repositório
@@ -47,7 +50,7 @@ dpge sumario documento.html Manual.pdf --ate-estabilizar
 | `assets/design-system/` | tokens, componentes, kit de publicação, fontes, logo, faixa padrão |
 | `assets/modelos/` | `publicacao.html` (capa, expediente, sumário, corpo, contracapa) e `documento.html` (documento curto) |
 | `scripts/` | `dpge.py` (ponto de entrada), build, sumário, checador de tipografia, conversor, preparo de imagem |
-| `references/` | entrevista, componentes, capa e contracapa, build, identidade, tipografia |
+| `references/` | entrevista, revisão de texto, gráficos e tabelas, componentes, capa e contracapa, build, identidade, tipografia |
 
 ## Licença e marca
 

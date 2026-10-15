@@ -1,6 +1,6 @@
 ---
 name: diagramacao-pge
-description: Diagrama documentos institucionais da Procuradoria-Geral do Estado de Mato Grosso do Sul (PGE-MS) em PDF A4 com a identidade visual do órgão, com capa, expediente, sumário com número de página, corpo, contracapa, cabeçalho e rodapé. Use quando o usuário pedir para diagramar, formatar ou "colocar no padrão da PGE" um manual, cartilha, apostila, programa, informativo, relatório, nota técnica ou ofício, para montar capa ou contracapa, ou para transformar um .docx ou .md em publicação da PGE. Não gera imagens (o usuário anexa a arte da capa, se quiser) e não faz peça processual.
+description: Diagrama documentos institucionais da Procuradoria-Geral do Estado de Mato Grosso do Sul (PGE-MS) em PDF A4 com a identidade visual do órgão, com capa, expediente, sumário com número de página, corpo, contracapa, cabeçalho e rodapé. Use quando o usuário pedir para diagramar, formatar ou "colocar no padrão da PGE" um manual, cartilha, apostila, programa, informativo, relatório, nota técnica ou ofício, para montar capa ou contracapa, ou para transformar um .docx ou .md em publicação da PGE. Revisa ortografia e gramática antes de diagramar e refaz no padrão da PGE as tabelas e os gráficos do original, se o usuário quiser. Não gera imagens (o usuário anexa a arte da capa, se quiser) e não faz peça processual.
 ---
 
 # Diagramação institucional da PGE-MS
@@ -9,7 +9,7 @@ Transforma um texto (.docx, .md ou o que o usuário colar) em PDF A4 no padrão 
 
 ## O que esta skill não faz
 
-- Não gera imagem. A arte da capa vem do usuário (veja `references/capa-e-contracapa.md`); sem arte, a capa usa a faixa vetorial padrão.
+- Não gera imagem. A arte da capa vem do usuário (veja `references/capa-e-contracapa.md`); sem arte, a capa usa a faixa vetorial padrão. Gráficos de dados são outra coisa: a skill os desenha em SVG a partir de números (`grafico criar`).
 - Não monta peça processual nem RTF de peticionamento.
 - Não escreve o conteúdo jurídico. Diagrama o texto recebido; o texto que a skill redigir (descritor da capa, caixas de síntese) é redação nova e deve ser sinalizado ao usuário para conferência.
 
@@ -24,14 +24,17 @@ Na primeira vez em cada computador, rode `<dpge> setup` (cria um ambiente própr
 1. **Entenda o pedido e escolha o modelo.** Documento de várias páginas, com capa, expediente e sumário (manual, cartilha, apostila, programa) usa `assets/modelos/publicacao.html`. Documento curto, sem capa própria (informativo, ofício, nota técnica, relatório de poucas páginas), usa `assets/modelos/documento.html`. Na dúvida, pergunte pelo número de páginas e pela necessidade de capa.
 2. **Faça as perguntas que faltam**, em linguagem simples e no máximo três por vez, com `AskUserQuestion` quando houver opções. O roteiro completo, com o que perguntar, a opção recomendada e onde cada resposta entra no modelo, está em `references/entrevista.md`. Nunca pergunte o que o texto recebido já responde.
 3. **Crie uma pasta de trabalho** para o documento (ex.: `manual-xyz/`) e copie o modelo escolhido para `documento.html` dentro dela. As imagens do documento ficam ao lado do HTML. Não edite os arquivos de `assets/`.
-4. **Passe o texto para HTML.** Para .docx ou .md, `<dpge> converter <arquivo> --saida corpo.html` gera o corpo e o esqueleto do sumário. Cole o corpo no modelo e monte as caixas e quadros que o texto pede, usando só os componentes de `references/componentes.md`.
-5. **Prepare as imagens**, se o usuário anexou alguma: `<dpge> imagem inspecionar <arquivo>` diz o que a imagem comporta, e `imagem faixa` ou `imagem pagina` recorta sem deformar. Mostre o resultado antes de seguir.
-6. **Preencha o modelo.** Capa, expediente, contracapa, metadados do cabeçalho. Nenhum marcador `[PREENCHER: ...]` pode sobrar: o build recusa o documento com eles.
-7. **Confira a tipografia:** `<dpge> checar documento.html --corrigir`. Ele insere o espaço não separável depois de `art.`, `n.`, `§`, troca aspas retas por curvas e relata o resto, que se resolve à mão.
-8. **Compile:** `<dpge> build documento.html --saida <Nome-do-arquivo>.pdf --conferir`. O `--conferir` grava uma imagem por página em `_conferencia/`.
-9. **Acerte o sumário** (só quando há sumário): `<dpge> sumario documento.html <Nome-do-arquivo>.pdf --ate-estabilizar`. Rode de novo sempre que o texto ou as quebras de página mudarem.
-10. **Olhe as páginas.** Abra as imagens de `_conferencia/`: capa, expediente, uma página de sumário, três páginas de corpo (inclusive uma com tabela ou caixa) e a contracapa. Procure buraco grande no pé da página, título órfão, linha terminando em `art.` ou `n.`, texto cortado e a capa fora de esquadro. Corrija e recompile. Só entregue depois de ver.
-11. **Entregue** o PDF com um relatório curto: o que foi feito, o que a skill redigiu (para conferir), o que ficou pendente e o que precisa da decisão do usuário.
+4. **Passe o texto para HTML.** Para .docx ou .md, `<dpge> converter <arquivo> --saida corpo.html` gera o corpo e o esqueleto do sumário. Guarde uma cópia intocada do corpo (`corpo-original.html`). O conversor avisa se o original tem tabelas, imagens ou gráficos do Word.
+5. **Revise ortografia e gramática** do corpo, antes de diagramar: `references/revisao.md`. Corrija só o texto, rode `<dpge> revisar corpo-original.html corpo.html --saida revisao.md`, mostre ao usuário o que mudou e os itens de ATENÇÃO, e só siga com o texto aprovado. Só se dispensa se o usuário disser que o texto já foi revisado.
+6. **Tabelas e gráficos do original** (se houver): pergunte ao usuário, uma vez, se quer refazê-los no padrão institucional (recomendado) e, se sim, refaça conforme `references/graficos-e-tabelas.md` (`<dpge> grafico extrair` e `grafico criar`).
+7. **Monte o documento.** Cole o corpo no modelo e monte as caixas e quadros que o texto pede, usando só os componentes de `references/componentes.md`.
+8. **Prepare as imagens**, se o usuário anexou alguma: `<dpge> imagem inspecionar <arquivo>` diz o que a imagem comporta, e `imagem faixa` ou `imagem pagina` recorta sem deformar. Mostre o resultado antes de seguir.
+9. **Preencha o modelo.** Capa, expediente, contracapa, metadados do cabeçalho. Nenhum marcador `[PREENCHER: ...]` pode sobrar: o build recusa o documento com eles. O texto que a skill redigir aqui (descritor, sínteses) passa pela revisão do passo 5.
+10. **Confira a tipografia:** `<dpge> checar documento.html --corrigir`. Ele insere o espaço não separável depois de `art.`, `n.`, `§`, troca aspas retas por curvas e relata o resto, que se resolve à mão.
+11. **Compile:** `<dpge> build documento.html --saida <Nome-do-arquivo>.pdf --conferir`. O `--conferir` grava uma imagem por página em `_conferencia/`.
+12. **Acerte o sumário** (só quando há sumário): `<dpge> sumario documento.html <Nome-do-arquivo>.pdf --ate-estabilizar`. Rode de novo sempre que o texto ou as quebras de página mudarem.
+13. **Olhe as páginas.** Abra as imagens de `_conferencia/`: capa, expediente, uma página de sumário, três páginas de corpo (inclusive uma com tabela, uma com gráfico e uma com caixa) e a contracapa. Procure buraco grande no pé da página, título órfão, linha terminando em `art.` ou `n.`, texto cortado, tabela sem a borda direita ou passando da margem (o build avisa: "passa N mm da margem direita"), gráfico sem rótulo e a capa fora de esquadro. Rode `<dpge> checar documento.html` de novo com o PDF pronto. Corrija e recompile. Só entregue depois de ver.
+14. **Entregue** o PDF com um relatório curto: o que foi feito, o resumo da revisão de texto (e o `revisao.md`), o que a skill redigiu (para conferir), tabelas e gráficos refeitos (com os números a conferir), o que ficou pendente e o que precisa da decisão do usuário.
 
 ## Regras que não se negociam
 
@@ -41,6 +44,8 @@ Na primeira vez em cada computador, rode `<dpge> setup` (cria um ambiente própr
 - **Não invente** norma, número de resolução, nome de autoridade, cargo, data ou estatística. O que não estiver no texto nem na resposta do usuário vira `[CONFERIR]`, e o build avisa quantos sobraram.
 - **Grafia dos nomes e cargos** do expediente: confira com o usuário, com acento. É o erro que mais volta.
 - **Redação nova** (descritor, síntese, rótulos) é sinalizada na entrega.
+- **Revisão de texto não muda conteúdo.** Citação literal, número, norma e nome próprio ficam como estão; dúvida vira pergunta ou `[CONFERIR]`.
+- **Gráfico e tabela refeitos usam só os números do original.** Nunca estime nem arredonde por conta própria.
 - Para quebrar página, mexa primeiro na entrelinha (`--entrelinha`), depois no resto; nunca diminua a fonte abaixo de 10 pt. Detalhes e armadilhas em `references/build.md`.
 
 ## Onde está cada coisa
@@ -53,3 +58,5 @@ Na primeira vez em cada computador, rode `<dpge> setup` (cria um ambiente própr
 | Comandos, opções do build, quebra de página, problemas | `references/build.md` |
 | Cores, fontes, margens, regras de marca | `references/identidade.md` |
 | Regras de composição tipográfica e o porquê | `references/tipografia.md` |
+| Revisão ortográfica e gramatical (etapa prévia) | `references/revisao.md` |
+| Gráficos e tabelas do original, gerador de gráficos | `references/graficos-e-tabelas.md` |

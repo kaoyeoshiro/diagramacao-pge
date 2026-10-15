@@ -10,6 +10,8 @@ dpge.py, ponto de entrada único da skill diagramacao-pge.
     dpge checar  <doc.html> ... confere a tipografia
     dpge converter <arq> ...    .docx ou .md para HTML
     dpge imagem  <subcomando>   prepara imagem de capa
+    dpge grafico criar|extrair  gráfico no padrão da PGE; lê gráficos do .docx
+    dpge revisar <antes> <depois>  relatório do que a revisão de texto mudou
 
 "dpge" é este arquivo: `python3 scripts/dpge.py` no Mac e no Linux, `dpge.cmd`
 (na raiz da skill) no Windows.
@@ -41,6 +43,8 @@ COMANDOS = {
     "checar": "checar_tipografia.py",
     "converter": "converter.py",
     "imagem": "imagem.py",
+    "grafico": "grafico.py",
+    "revisar": "revisao.py",
 }
 
 

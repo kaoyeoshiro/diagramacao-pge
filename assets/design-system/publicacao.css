@@ -350,6 +350,7 @@
   .confronto,
   .modelo,
   .indice-modelos,
+  .grafico,
   .exemplo {
     margin-right: 0.8mm;
   }
@@ -357,13 +358,45 @@
   table.dados,
   table.criterios {
     width: calc(100% - 0.8mm);
+    max-width: calc(100% - 0.8mm);
+    /* Contorno fechado nos quatro lados, o direito inclusive. O recuo de
+       0,8 mm acima mantém a borda direita dentro da área que o Chromium
+       imprime; sem ele o filete some. */
+    border: 0.3mm solid var(--cinza-05);
   }
 
-  /* O corpo justifica sempre. Na coluna estreita da tabela, do quadro e do
-     glossário a hifenização entra para a linha fechar à direita sem rio.
-     Rótulo, cabeçalho e número ficam como estão. */
+  /* Tabela larga (muitas colunas, número de processo, URL) estourava a
+     margem direita e as últimas colunas saíam cortadas da página. Com
+     `overflow-wrap: anywhere` o menor tamanho possível da coluna passa a ser
+     uma letra, então a tabela se ajusta à largura útil e a célula quebra o
+     que não tem ponto de quebra. */
+  table.dados th,
   table.dados td,
-  table.criterios td,
+  table.criterios th,
+  table.criterios td {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  /* Seis colunas ou mais: corpo e respiro menores para a tabela caber sem
+     transformar cada célula numa coluna de duas letras. O conversor aplica
+     esta classe sozinho; à mão, `<table class="dados densa">`. */
+  table.dados.densa { font-size: 8.4pt; }
+  table.dados.densa th { font-size: 6.4pt; padding: 2.2mm 2.2mm; letter-spacing: 0.06em; }
+  table.dados.densa td { padding: 1.9mm 2.2mm; line-height: 1.3; }
+
+  /* O corpo justifica sempre. Na coluna estreita do quadro e do glossário a
+     hifenização entra para a linha fechar à direita sem rio. Célula de
+     tabela fica alinhada à esquerda: coluna estreita justificada abre vão
+     entre as palavras ("Juridicidade      e"). Rótulo, cabeçalho e número
+     ficam como estão. */
+  table.dados td,
+  table.criterios td {
+    text-align: left;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+  }
   .requisitos div,
   dl.glossario dd {
     text-align: justify;
@@ -866,3 +899,35 @@
     font-weight: 500;
     color: var(--cinza-texto);
     line-height: 1.35;
+  }
+
+  /* ------------------------------------------------------------
+     GRÁFICO EM SVG (scripts/grafico.py) E FIGURA
+     O gráfico reaproveita o quadro `.grafico` do design system; o SVG
+     herda a fonte do documento e ocupa a largura útil do quadro.
+     ------------------------------------------------------------ */
+  .grafico .grafico-svg { display: block; width: 100%; height: auto; }
+  .grafico-fonte {
+    margin-top: 2.4mm;
+    font-size: var(--t-rotulo);
+    color: var(--cinza-texto);
+    text-align: left;
+    line-height: 1.35;
+  }
+
+  /* Imagem trazida do original (gráfico ou tabela que não foi refeito). */
+  img { max-width: 100%; height: auto; }
+  figure.figura {
+    margin: 3mm 0 var(--esp-3) 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    text-align: center;
+  }
+  figure.figura img { display: block; margin: 0 auto; max-width: 100%; }
+  figure.figura figcaption {
+    margin-top: 2mm;
+    font-size: var(--t-rotulo);
+    color: var(--cinza-texto);
+    text-align: left;
+    line-height: 1.35;
+  }

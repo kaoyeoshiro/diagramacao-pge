@@ -20,6 +20,9 @@ No Windows o `dpge.cmd` acha o Python (`py` ou `python`) sozinho.
 | `checar doc.html [--corrigir]` | relata (e corrige o que é mecânico) problemas de tipografia |
 | `converter arq.docx\|.md` | gera o corpo em HTML e o esqueleto do sumário |
 | `imagem inspecionar\|faixa\|pagina arq` | prepara a imagem de capa |
+| `revisar antes.html depois.html [--saida revisao.md]` | relatório do que a revisão de texto mudou; sai com 1 se houver item a conferir |
+| `grafico extrair arq.docx` | lê os gráficos nativos do Word e grava a especificação em JSON |
+| `grafico criar dados.json [--saida figura.html]` | gera o gráfico em SVG (barra, coluna, linha, rosca, pizza) no padrão da PGE |
 
 ## Opções do build
 

@@ -415,7 +415,8 @@ def main() -> int:
         pdfs = args.pdf or [p for modo in ("sobrio", "completo")
                             if (p := args.html.parent / f"{args.html.stem}-{modo}.pdf").exists()]
         for pdf in pdfs:
-            achados += checar_pdf(pdf, 'class="contracapa"' in html)
+            vivo = RE_STYLE.sub(" ", html)  # comentário não vale
+            achados += checar_pdf(pdf, 'class="contracapa"' in vivo)
 
     erros = sum(1 for n, _, _ in achados if n == "ERRO")
     avisos = sum(1 for n, _, _ in achados if n == "AVISO")

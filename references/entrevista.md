@@ -52,6 +52,15 @@ Item sem resposta não entra: apague o bloco do modelo em vez de deixar o marcad
 
 Se o texto pede quadro de modelo de documento, glossário, tabela de prazos, linha do tempo ou gráfico, confirme quais e use os componentes de `componentes.md`. Para "caixa de síntese" e "caixa de atenção", pergunte se o usuário quer que a skill proponha o texto (redação nova, a conferir) ou se ele já tem.
 
-## 8. Fecho
+## 8. Revisão, tabelas e gráficos do original
+
+Duas perguntas, só quando se aplicam:
+
+| Pergunta | Quando | Efeito |
+|---|---|---|
+| O texto já passou por revisão ortográfica e gramatical? | sempre, em uma frase, sugerindo que a skill revise | sem dispensa expressa, a revisão de `revisao.md` roda e o usuário aprova o relatório |
+| O original tem tabelas ou gráficos. Quer que sejam refeitos no padrão da PGE? (recomendado: sim) | o `converter` encontrou tabelas, imagens ou gráficos do Word | sim: `graficos-e-tabelas.md`; não: imagens entram como figura, e gráfico do Word precisa vir como imagem |
+
+## 9. Fecho
 
 Antes de compilar, repita em três linhas o que será feito (modelo, capa, o que entra no expediente e na contracapa) e só então rode o build, se o usuário não tiver dito que dispensa a conferência.

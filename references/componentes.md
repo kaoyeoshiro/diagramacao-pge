@@ -150,3 +150,9 @@ Largura da barra em mm, 112 mm para a maior e as outras em proporção. Todo nú
 ## Componentes herdados de peça processual
 
 `tese`, `precedente`, `pedidos`, `fecho` de petição e as capas `.capa-tarja` existem no CSS por herança. Fora do escopo desta skill; não os use em publicação.
+
+## Tabela larga, gráfico em SVG e figura
+
+- `table.dados.densa`: corpo e respiro menores, para tabela de seis colunas ou mais (o `converter` aplica sozinho). Qualquer tabela tem contorno nos quatro lados e a célula quebra palavra sem ponto de quebra (número de processo, URL), então nada passa da margem direita. Tabela que ainda assim ficar ilegível: menos colunas, ou duas tabelas.
+- `<div class="grafico">` com `<svg class="grafico-svg">`: gerado por `grafico criar` (veja `graficos-e-tabelas.md`); título em `.grafico-titulo`, subtítulo em `.grafico-sub`, fonte em `.grafico-fonte`. Aparece em qualquer modo (não leva `so-completo`).
+- `<figure class="figura"><img src="..." alt="..."><figcaption>Legenda. Fonte: ...</figcaption></figure>`: imagem do original mantida. Não parte entre páginas.

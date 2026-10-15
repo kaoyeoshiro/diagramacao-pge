@@ -450,6 +450,40 @@ def compilar(caminho_html: Path, *args, **kwargs) -> Path:
             missing_ok=True)
 
 
+def avisar_estouros(pagina) -> None:
+    """Avisa de tabela, gráfico, figura ou quadro mais largo que a coluna.
+
+    O Chromium não imprime o que passa da margem direita: a parte que sobra
+    some do PDF sem erro, e uma coluna inteira de tabela pode desaparecer. A
+    medida é feita com a largura útil do texto (160 mm, 605 px) e a mídia de
+    impressão, e a página volta ao tamanho de antes."""
+    anterior = pagina.viewport_size
+    pagina.set_viewport_size({"width": 605, "height": 900})
+    pagina.emulate_media(media="print")
+    medidas = pagina.evaluate(
+        """() => {
+            const largura = document.documentElement.clientWidth;
+            const achados = [];
+            for (const el of document.querySelectorAll(
+                    'table, .grafico, figure, img, pre, .sintese, .modelo, .confronto')) {
+                if (el.closest('.capa-manual, .contracapa, .cm-topo')) continue;
+                const r = el.getBoundingClientRect();
+                if (r.width > 0 && r.right > largura + 1.5) {
+                    achados.push([el.tagName.toLowerCase(),
+                                  (el.innerText || el.alt || '').trim().replace(/\\s+/g, ' ').slice(0, 40),
+                                  Math.round((r.right - largura) * 25.4 / 96)]);
+                }
+            }
+            return achados;
+        }""")
+    pagina.emulate_media(media=None)
+    if anterior:
+        pagina.set_viewport_size(anterior)
+    for tag, trecho, mm in medidas[:6]:
+        print(f"  AVISO: <{tag}> passa {mm} mm da margem direita e será cortado no PDF: "
+              f"\"{trecho}\". Reduza colunas, abrevie ou divida a tabela.")
+
+
 def _compilar(caminho_html: Path, modo: str, conferir: bool,
              entrelinha=None, esp_paragrafo=None, sufixo="", paleta=None,
              corpo=None, fonte=None, texto=None, estrutura=None,
@@ -564,6 +598,7 @@ def _compilar(caminho_html: Path, modo: str, conferir: bool,
 
         pagina.evaluate("document.fonts.ready")
         pagina.wait_for_timeout(400)
+        avisar_estouros(pagina)
 
         # Depois das injeções de paleta e escala (o polyfill congela o
         # layout ao paginar; estilo acrescentado depois não é relido) e
