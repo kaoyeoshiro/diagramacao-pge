@@ -147,9 +147,10 @@ def desenhar_barra(e: dict) -> tuple:
     emp = e["empilhado"] and ns > 1
     cat = [quebrar(r, 30, 3) for r in rot]
     esq = min(max(len(l) for ls in cat for l in ls) * F_ROT * CHAR + 14, 250)
-    dir_ = 60 if not emp else 70
-    x0, x1 = esq, W - dir_
     totais = [sum(s["valores"][i] for s in series) for i in range(n)]
+    candidatos = totais if emp else [v for s in series for v in s["valores"]]
+    dir_ = max(len(fmt(v, casas, un)) for v in candidatos) * F_VAL * 0.58 + 14
+    x0, x1 = esq, W - dir_
     maximo = max(totais) if emp else max(v for s in series for v in s["valores"])
     maximo = maximo if maximo > 0 else 1
     bh = 18 if (ns == 1 or emp) else 13
@@ -203,7 +204,7 @@ def desenhar_coluna(e: dict) -> tuple:
     emp = e["empilhado"] and ns > 1
     esq, dir_ = 8, 8
     ph = 210.0
-    topo = 10.0
+    topo = 22.0
     y0 = topo
     parte = []
     if ns > 1:
@@ -268,15 +269,17 @@ def desenhar_linha(e: dict) -> tuple:
     n, ns = len(rot), len(series)
     todos = [v for s in series for v in s["valores"]]
     lo, hi, passo = escala_bonita(max(todos), min(0.0, min(todos)))
-    esq = max(len(fmt(hi, casas, un)), len(fmt(lo, casas, un))) * F_EIXO * CHAR + 14
+    # casas do eixo: as pedidas e as que o passo exige (passo 0,5 pede uma)
+    casas_eixo = max(casas, math.ceil(-math.log10(passo) - 1e-9) if passo < 1 else 0)
+    esq = max(len(fmt(hi, casas_eixo, un)), len(fmt(lo, casas_eixo, un))) * F_EIXO * CHAR + 14
     dir_ = 20
     ph = 200.0
-    y0 = 12.0
+    y0 = 24.0
     parte = []
     if ns > 1:
         svg, alt = legenda(series, 12)
         parte.append(svg)
-        y0 = alt + 14
+        y0 = alt + 26
     base = y0 + ph
     largura = W - esq - dir_
 
@@ -291,7 +294,7 @@ def desenhar_linha(e: dict) -> tuple:
         yy = Y(v)
         parte.append(f'<line x1="{esq:.1f}" y1="{yy:.1f}" x2="{W - dir_}" y2="{yy:.1f}" '
                      f'stroke="{CINZA_LINHA if v != 0 else MARINHO}" stroke-width="1"/>')
-        parte.append(texto(esq - 8, yy + 4, fmt(v, casas if passo < 1 else 0, un if un in ("%",) else ""),
+        parte.append(texto(esq - 8, yy + 4, fmt(v, casas_eixo, un if un in ("%",) else ""),
                            F_EIXO, 400, CINZA_TEXTO, "end"))
         v += passo
     carac = int((largura / max(n - 1, 1)) / (F_ROT * CHAR)) - 1
@@ -385,6 +388,8 @@ DESENHO = {"barra": desenhar_barra, "coluna": desenhar_coluna, "linha": desenhar
 # --------------------------------------------------------------------------
 
 def validar(spec: dict, n: int = 1) -> dict:
+    if not isinstance(spec, dict):
+        raise Erro(f"gráfico {n}: a especificação precisa ser um objeto JSON com tipo, rotulos e series")
     ref = f"gráfico {n}" + (f" ({spec.get('titulo')})" if spec.get("titulo") else "")
     tipo = str(spec.get("tipo", "")).lower()
     if tipo not in TIPOS:
@@ -395,30 +400,48 @@ def validar(spec: dict, n: int = 1) -> dict:
         raise Erro(f"{ref}: faltam rotulos ou series")
     limpas = []
     for s in series:
+        if not isinstance(s, dict):
+            raise Erro(f"{ref}: cada série precisa ser um objeto com nome e valores")
         vals = s.get("valores") or []
         if len(vals) != len(rot):
             raise Erro(f"{ref}: a série '{s.get('nome')}' tem {len(vals)} valores para {len(rot)} rótulos")
+        if any(v is None for v in vals):
+            raise Erro(f"{ref}: valor ausente (null) na série '{s.get('nome')}'; preencha com o "
+                       "dado confirmado pelo usuário")
         try:
             vals = [float(v) for v in vals]
         except (TypeError, ValueError):
             raise Erro(f"{ref}: valor que não é número na série '{s.get('nome')}'")
+        if any(not math.isfinite(v) for v in vals):
+            raise Erro(f"{ref}: valor infinito ou NaN na série '{s.get('nome')}'")
         limpas.append({"nome": s.get("nome", ""), "valores": vals})
     if tipo in ("rosca", "pizza"):
         limpas = limpas[:1]
         if any(v < 0 for v in limpas[0]["valores"]) or sum(limpas[0]["valores"]) <= 0:
             raise Erro(f"{ref}: rosca e pizza precisam de valores positivos")
+        if len(rot) > len(COR):
+            raise Erro(f"{ref}: rosca e pizza aceitam até {len(COR)} fatias (as cores acabam); "
+                       "agrupe o restante em 'Outros' ou use barra")
     if tipo == "linha" and len(rot) < 2:
         raise Erro(f"{ref}: linha precisa de dois pontos ou mais")
     if tipo in ("barra", "coluna") and any(v < 0 for s in limpas for v in s["valores"]):
         raise Erro(f"{ref}: barra e coluna não aceitam valor negativo; use linha")
     if len(limpas) > len(COR):
         raise Erro(f"{ref}: no máximo {len(COR)} séries; separe em dois gráficos")
+    try:
+        casas = int(spec.get("casas", 0))
+        bruto = spec.get("destaque", [])
+        destaque = [int(i) for i in (bruto if isinstance(bruto, list) else [bruto])]
+    except (TypeError, ValueError):
+        raise Erro(f"{ref}: 'casas' e 'destaque' precisam ser números inteiros")
+    if not 0 <= casas <= 6:
+        raise Erro(f"{ref}: 'casas' vai de 0 a 6")
     return {
         "tipo": tipo, "titulo": spec.get("titulo", ""), "subtitulo": spec.get("subtitulo", ""),
         "fonte": spec.get("fonte", ""), "rotulos": [str(r) for r in rot], "series": limpas,
-        "unidade": spec.get("unidade", ""), "casas": int(spec.get("casas", 0)),
+        "unidade": str(spec.get("unidade", "")), "casas": casas,
         "empilhado": bool(spec.get("empilhado", False)),
-        "destaque": [int(i) for i in spec.get("destaque", [])], "total": spec.get("total", ""),
+        "destaque": destaque, "total": spec.get("total", ""),
     }
 
 
@@ -476,21 +499,40 @@ def _pontos(no) -> list:
         cache = no.find(".//c:numCache", NS)
     if cache is None:
         return []
-    n = int(cache.find("c:ptCount", NS).get("val")) if cache.find("c:ptCount", NS) is not None else 0
+    cont = cache.find("c:ptCount", NS)
+    try:
+        n = int(cont.get("val")) if cont is not None else 0
+    except (TypeError, ValueError):
+        n = 0
+    if not 0 <= n <= 1000:
+        raise Erro("o gráfico declara mais de 1000 pontos; recuso abrir")
     out = [""] * n
     for pt in cache.findall("c:pt", NS):
-        i = int(pt.get("idx"))
+        try:
+            i = int(pt.get("idx"))
+        except (TypeError, ValueError):
+            continue
         v = pt.find("c:v", NS)
-        if i < len(out):
+        if 0 <= i < len(out):
             out[i] = v.text if v is not None and v.text is not None else ""
     return out
+
+
+def _numero(v: str):
+    """Número do cache do Word, ou None se a célula está vazia ou não é número
+    (#N/A, texto): zero inventado seria dado novo no gráfico."""
+    try:
+        x = float((v or "").strip())
+    except ValueError:
+        return None
+    return x if math.isfinite(x) else None
 
 
 def _chart_para_spec(xml: bytes, contexto: str, n: int) -> dict:
     raiz = _xml(xml)
     plot = raiz.find(".//c:plotArea", NS)
     tipo_xml, grafico = None, None
-    for filho in plot:
+    for filho in (plot if plot is not None else []):
         nome = filho.tag.split("}")[-1]
         if nome in MAPA_TIPO or nome in ("scatterChart", "bubbleChart", "radarChart",
                                          "stockChart", "surfaceChart", "surface3DChart"):
@@ -517,11 +559,14 @@ def _chart_para_spec(xml: bytes, contexto: str, n: int) -> dict:
         vals = _pontos(ser.find("c:val", NS))
         if not rotulos:
             rotulos = cats or [str(i + 1) for i in range(len(vals))]
-        series.append({"nome": nome,
-                       "valores": [float(v) if re.fullmatch(r"-?\d+(\.\d+)?([eE][-+]?\d+)?", v or "") else 0
-                                   for v in vals]})
+        series.append({"nome": nome, "valores": [_numero(v) for v in vals]})
     spec["rotulos"], spec["series"] = rotulos, series
-    spec["casas"] = 0 if all(abs(v - round(v)) < 1e-9 for s in series for v in s["valores"]) else 1
+    ausentes = sum(v is None for s in series for v in s["valores"])
+    if ausentes:
+        spec["_aviso"] = (f"{ausentes} valor(es) ausente(s) ou ilegível(is) ficaram como null; "
+                          "confirme com o usuário e preencha antes de rodar `grafico criar`")
+    achados = [v for s in series for v in s["valores"] if v is not None]
+    spec["casas"] = 0 if all(abs(v - round(v)) < 1e-9 for v in achados) else 1
     return spec
 
 
@@ -597,7 +642,7 @@ def main() -> int:
 
     try:
         specs = extrair(args.docx)
-    except (Erro, zipfile.BadZipFile, KeyError) as exc:
+    except (Erro, zipfile.BadZipFile, KeyError, ET.ParseError) as exc:
         print(f"erro: não consegui ler {args.docx.name} como .docx ({exc})", file=sys.stderr)
         return 1
     destino = args.saida or args.docx.with_name(args.docx.stem + "-graficos.json")

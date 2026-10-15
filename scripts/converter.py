@@ -125,7 +125,13 @@ def ajustar_tabela(t) -> None:
     linhas = t.find_all("tr")
     if not linhas:
         return
-    largura = sum(int(c.get("colspan", 1)) for c in linhas[0].find_all(["th", "td"]))
+    def _span(c) -> int:
+        try:
+            return max(int(c.get("colspan", 1)), 1)
+        except (TypeError, ValueError):
+            return 1
+
+    largura = sum(_span(c) for c in linhas[0].find_all(["th", "td"]))
     if largura >= 6:
         t["class"] = t.get("class", []) + ["densa"]
     if any(c.has_attr("colspan") or c.has_attr("rowspan") for c in t.find_all(["th", "td"])):

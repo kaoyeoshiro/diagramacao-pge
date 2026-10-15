@@ -468,15 +468,19 @@ def avisar_estouros(pagina) -> None:
                     'table, .grafico, figure, img, pre, .sintese, .modelo, .confronto')) {
                 if (el.closest('.capa-manual, .contracapa, .cm-topo')) continue;
                 const r = el.getBoundingClientRect();
-                if (r.width > 0 && r.right > largura + 1.5) {
+                // a caixa pode ter sido encolhida por max-width com o conteúdo
+                // vazando dela (pre, svg largo, tabela de largura fixa):
+                // vale o maior entre a borda da caixa e a do conteúdo
+                const fim = Math.max(r.right, r.left + el.scrollWidth);
+                if (r.width > 0 && fim > largura + 1.5) {
                     achados.push([el.tagName.toLowerCase(),
                                   (el.innerText || el.alt || '').trim().replace(/\\s+/g, ' ').slice(0, 40),
-                                  Math.round((r.right - largura) * 25.4 / 96)]);
+                                  Math.round((fim - largura) * 25.4 / 96)]);
                 }
             }
             return achados;
         }""")
-    pagina.emulate_media(media=None)
+    pagina.emulate_media(media="null")
     if anterior:
         pagina.set_viewport_size(anterior)
     for tag, trecho, mm in medidas[:6]:

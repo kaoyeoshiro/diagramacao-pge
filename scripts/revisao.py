@@ -39,10 +39,11 @@ def blocos_de(caminho: Path) -> tuple:
     sopa = BeautifulSoup(caminho.read_text(encoding="utf-8"), "html.parser")
     textos = []
     for no in sopa.find_all(BLOCOS):
-        # só o bloco folha: contêiner (div, li com p dentro) repete o texto dos filhos
-        if no.find(BLOCOS):
-            continue
-        t = " ".join(no.get_text(" ", strip=True).split())
+        # texto próprio do bloco: o que está nele e não num bloco aninhado.
+        # `<li>texto<ol><li>filho</li></ol></li>` tem texto próprio e um filho
+        # que se compara à parte; contar só a folha deixaria o pai de fora.
+        proprio = [t for t in no.find_all(string=True) if t.find_parent(BLOCOS) is no]
+        t = " ".join(" ".join(proprio).split())
         if t:
             textos.append(t)
     estrutura = {
